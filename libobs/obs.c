@@ -1609,6 +1609,23 @@ bool obs_get_audio_info(struct obs_audio_info *oai)
 	return true;
 }
 
+bool obs_get_audio_info2(struct obs_audio_info2 *oai2)
+{
+	struct obs_core_audio *audio = &obs->audio;
+	struct obs_audio_info oai;
+
+	if (!obs_get_audio_info(&oai) || !oai2 || !audio->audio) {
+		return false;
+	} else {
+		oai2->samples_per_sec = oai.samples_per_sec;
+		oai2->speakers = oai.speakers;
+		oai2->fixed_buffering = audio->fixed_buffer;
+		oai2->max_buffering_ms =
+			audio->max_buffering_ticks * AUDIO_OUTPUT_FRAMES * SEC_TO_MSEC / (int)oai2->samples_per_sec;
+		return true;
+	}
+}
+
 bool obs_enum_source_types(size_t idx, const char **id)
 {
 	if (idx >= obs->source_types.num)
@@ -2929,17 +2946,19 @@ void start_raw_video(video_t *v, const struct video_scale_info *conversion, uint
 		     void (*callback)(void *param, struct video_data *frame), void *param)
 {
 	struct obs_core_video_mix *video = get_mix_for_video(v);
-	if (video)
+	if (!video)
+		return;
+	if (video_output_connect2(v, conversion, frame_rate_divisor, callback, param))
 		os_atomic_inc_long(&video->raw_active);
-	video_output_connect2(v, conversion, frame_rate_divisor, callback, param);
 }
 
 void stop_raw_video(video_t *v, void (*callback)(void *param, struct video_data *frame), void *param)
 {
 	struct obs_core_video_mix *video = get_mix_for_video(v);
-	if (video)
+	if (!video)
+		return;
+	if (video_output_disconnect2(v, callback, param))
 		os_atomic_dec_long(&video->raw_active);
-	video_output_disconnect(v, callback, param);
 }
 
 void obs_add_raw_video_callback(const struct video_scale_info *conversion,
