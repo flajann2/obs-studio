@@ -7,6 +7,8 @@ if(NOT ENABLE_AJA)
   return()
 endif()
 
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG=ON)
+
 find_package(LibAJANTV2 REQUIRED)
 
 add_library(aja MODULE)
