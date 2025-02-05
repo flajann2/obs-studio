@@ -33,3 +33,6 @@ add_subdirectory(test/test-input)
 add_subdirectory(frontend)
 
 message_configuration()
+
+install(DIRECTORY locale DESTINATION . )
+install(DIRECTORY data DESTINATION .)
